@@ -43,6 +43,9 @@ libcurl = "7"
 polkitgobject = { name = "polkit-gobject-1", version = "0" }
 rpm = "4"
 
+[patch.crates-io]
+ostree-ext = { path = "../ostree-rs-ext/lib/" }
+
 [dependencies]
 anyhow = "1.0.90"
 binread = "2.2.0"
