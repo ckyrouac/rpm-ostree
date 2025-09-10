@@ -1,0 +1,71 @@
+FROM quay.io/containers/buildah:latest as builder
+
+RUN <<ENDF
+
+set -xeuo pipefail
+
+dnf -y install \
+    autoconf automake libtool git \
+    gcc gcc-c++ make cmake \
+    rust cargo rust-packaging \
+    python3-devel \
+    gtk-doc \
+    gobject-introspection-devel \
+    ostree-devel \
+    polkit-devel \
+    json-glib-devel \
+    rpm-devel \
+    libarchive-devel \
+    systemd-devel \
+    libcap-devel \
+    libattr-devel \
+    libzstd-devel \
+    librepo-devel \
+    libcurl-devel \
+    expat-devel \
+    check-devel \
+    libsolv-devel \
+    jq \
+    sqlite-devel \
+    json-c-devel \
+    libmodulemd-devel \
+    gettext \
+    gpgme-devel \
+    util-linux \
+    glib2-devel \
+    libsmartcols-devel \
+    zchunk-devel \
+    openssl-devel \
+    pkg-config \
+    cppunit-devel
+
+cd /src
+./autogen.sh --prefix=/usr --libdir=/usr/lib64 --sysconfdir=/etc --disable-gtk-doc
+make
+cp target/release/rpm-ostree /rpm-ostree
+
+ENDF
+
+FROM quay.io/containers/buildah:latest
+RUN dnf -y install \
+    json-glib \
+    libarchive \
+    openssl-libs \
+    polkit-libs \
+    rpm-libs \
+    sqlite \
+    systemd-libs \
+    gpgme \
+    json-c \
+    librepo \
+    libsolv \
+    libmodulemd \
+    ostree-libs \
+    libzstd \
+    glib2 \
+    libcap \
+    libattr \
+    zchunk-libs \
+    skopeo
+COPY --from=builder /rpm-ostree /usr/bin/rpm-ostree
+COPY tests/build-chunked-oci/test-buildah.sh /test-buildah.sh
