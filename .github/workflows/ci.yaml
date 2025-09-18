@@ -251,7 +251,7 @@ jobs:
   #       run: env TMPDIR=/var/tmp ./tests/encapsulate.sh
   test-build-chunked-oci:
     name: "build-chunked-oci tests"
-    # needs: build-c9s
+    needs: build-c9s
     runs-on: ubuntu-24.04
     steps:
       # https://github.com/containers/podman/discussions/17362
@@ -267,17 +267,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
-      # - name: Download build
-      #   uses: actions/download-artifact@v4.1.7
-      #   with:
-      #     name: install-c9s.tar
-      # - name: Integration tests
-      #   run: |
-      #     set -xeuo pipefail
-      #     cd tests/build-chunked-oci
-      #     tar -xzvf ../../install.tar
-      #     sudo podman build -v $(pwd)/usr/bin:/ci -t localhost/builder -f Containerfile.builder
-      #     sudo ./test.sh
+      - name: Download build
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: install-c9s.tar
+      - name: Integration tests
+        run: |
+          set -xeuo pipefail
+          cd tests/build-chunked-oci
+          tar -xzvf ../../install.tar
+          sudo podman build -v $(pwd)/usr/bin:/ci -t localhost/builder -f Containerfile.builder
+          sudo ./test.sh
       - name: Unprivileged tests
         run: |
           set -xeuo pipefail
@@ -286,33 +286,33 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           podman build -v $(pwd):/src -t localhost/buildah -f tests/build-chunked-oci/Containerfile.buildah .
           podman run --rm --device=/dev/fuse localhost/buildah /test-buildah.sh
-  # build-c9s:
-  #   name: "Build (c9s)"
-  #   runs-on: ubuntu-latest
-  #   container: quay.io/centos/centos:stream9
-  #   steps:
-  #     - name: Install git
-  #       run: yum -y install git
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v3
-  #       with:
-  #         submodules: true
-  #     # https://github.com/actions/checkout/issues/760
-  #     - name: Mark git checkout as safe
-  #       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-  #     - name: Run ridiculous RHEL -devel package workaround
-  #       run: ./ci/ridiculous-rhel-devel-workaround.sh
-  #     - name: Install dependencies
-  #       run: ./ci/installdeps.sh
-  #     - name: Build
-  #       run: ./ci/build.sh && make install DESTDIR=$(pwd)/install && tar -C install -czf install.tar .
-  #     - name: Unit tests
-  #       run: cargo test
-  #     - name: Upload binary
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: install-c9s.tar
-  #         path: install.tar
+  build-c9s:
+    name: "Build (c9s)"
+    runs-on: ubuntu-latest
+    container: quay.io/centos/centos:stream9
+    steps:
+      - name: Install git
+        run: yum -y install git
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      # https://github.com/actions/checkout/issues/760
+      - name: Mark git checkout as safe
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Run ridiculous RHEL -devel package workaround
+        run: ./ci/ridiculous-rhel-devel-workaround.sh
+      - name: Install dependencies
+        run: ./ci/installdeps.sh
+      - name: Build
+        run: ./ci/build.sh && make install DESTDIR=$(pwd)/install && tar -C install -czf install.tar .
+      - name: Unit tests
+        run: cargo test
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-c9s.tar
+          path: install.tar
   # # Doc: https://github.com/redhat-plumbers-in-action/differential-shellcheck#usage
   # differential-shellcheck:
   #   name: Differential ShellCheck
