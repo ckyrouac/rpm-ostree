@@ -267,6 +267,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
+      - name: Unprivileged tests
+        run: |
+          set -xeuo pipefail
+          sudo apt-get update
+          sudo apt-get install -y fuse-overlayfs
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          podman build -v $(pwd):/src -t localhost/buildah -f tests/build-chunked-oci/Containerfile.buildah .
+          podman run --rm --device=/dev/fuse localhost/buildah /test-buildah.sh
       - name: Download build
         uses: actions/download-artifact@v4.1.7
         with:
@@ -278,14 +286,6 @@ jobs:
           tar -xzvf ../../install.tar
           sudo podman build -v $(pwd)/usr/bin:/ci -t localhost/builder -f Containerfile.builder
           sudo ./test.sh
-      - name: Unprivileged tests
-        run: |
-          set -xeuo pipefail
-          sudo apt-get update
-          sudo apt-get install -y fuse-overlayfs
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          podman build -v $(pwd):/src -t localhost/buildah -f tests/build-chunked-oci/Containerfile.buildah .
-          podman run --rm --device=/dev/fuse localhost/buildah /test-buildah.sh
   build-c9s:
     name: "Build (c9s)"
     runs-on: ubuntu-latest
