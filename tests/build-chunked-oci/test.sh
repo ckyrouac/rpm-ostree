@@ -32,6 +32,7 @@ new_created=$(jq -r .Created < new-config.json)
 test "$(date --date="${orig_created}" --rfc-3339=seconds)" = "$(date --date="${new_created}" --rfc-3339=seconds)"
 # Verify we propagated labels
 test $(jq -r .Labels.testlabel < new-config.json) = "1"
+
 echo "ok rechunking with labels"
 
 # Verify directory metadata for --format-version=1 image
@@ -231,6 +232,11 @@ verify_layer_contents "dir4" "$expected_dir4" "$image_manifest"
 verify_layer_contents "dir4fileB" "$expected_dir4fileB" "$image_manifest"
 
 echo "ok exclusive layers functionality"
+
+# TODO: Cleanup previous run state?
+podman rmi -f localhost/chunked localhost/modified localhost/exclusive-test localhost/exclusive-chunked
+rm -rf "${oci_dir}"
+
 
 echo "Testing oci-archive output"
 podman run --rm --privileged --security-opt=label=disable \
